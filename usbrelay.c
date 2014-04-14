@@ -21,6 +21,12 @@
 #define READ_MASK_1 0x01
 #define READ_MASK_2 0x02
 
+enum OpID {
+    ID_ON = 0,
+    ID_OFF,
+    ID_GET
+};
+
 /* ------------------------------------------------------------------------- */
 
 static char *usbErrorMessage(int errCode)
@@ -38,7 +44,7 @@ static char buffer[80];
     return NULL;    /* not reached */
 }
 
-static usbDevice_t  *openDevice(void)
+static usbDevice_t  *openDevice(int number, const char* name)
 {
 usbDevice_t     *dev = NULL;
 unsigned char   rawVid[2] = { 0xc0, 0x16 };  /* = 0x16c0 = 5824 = voti.nl */
@@ -50,9 +56,10 @@ int             pid = rawPid[0] + 256 * rawPid[1];
 int             err;
 
 
-
-    if((err = usbhidOpenDevice(&dev, vid, vendorName, pid, productName, 0)) != 0){
-        fprintf(stderr, "error finding %s: %s\n", productName, usbErrorMessage(err));
+    const char* pName = name ? name : productName;
+    
+    if((err = usbhidOpenDevice(&dev, vid, vendorName, pid, pName, number, 0)) != 0){
+        fprintf(stderr, "error finding %s: %s\n", pName, usbErrorMessage(err));
         return NULL;
     }
     return dev;
@@ -73,9 +80,20 @@ static void decode(char *buffer, int len)
 static void usage(char *myName)
 {
     fprintf(stderr, "usage:\n");
-    fprintf(stderr, "  %s on [1|2]\n", myName);
-    fprintf(stderr, "  %s off [1|2]\n", myName);
+    fprintf(stderr, "  %s on [1|2|3|4] [-n <number>] [-name <name>]\n", myName);
+    fprintf(stderr, "  %s off [1|2|3|4]\n", myName);
     fprintf(stderr, "  %s get\n", myName);
+    fprintf(stderr, "  %s -h\n", myName);
+}
+
+static void help(char *myName)
+{
+    fprintf(stdout, "help: %s on|off [1|2|3|4] [-n <number>|all] [-name <name>] [-h]\n", myName);
+    fprintf(stdout, "  -h|--help  print this help\n");
+    fprintf(stdout, "  on|off [1|2|3|4]  switch specified relay output on/off\n");
+    fprintf(stdout, "  get  get relay status\n");
+    fprintf(stdout, "  -n <number>|all  use specified relay (if there are more than one relay)\n");
+    fprintf(stdout, "  -name <name>  use relay with name, default is \"USBRelay2\"\n");
 }
 
 int main(int argc, char **argv)
@@ -85,6 +103,11 @@ char        buffer[129];    /* room for dummy report ID */
 int         err;
 char        cmd = 0x00;
 
+int         operation = ID_GET;
+char*       name      = NULL;
+int         number    = 0;
+char        channel   = 0;
+
     memset(buffer, 0, sizeof(buffer));
 
     if (argc < 2) {
@@ -92,26 +115,56 @@ char        cmd = 0x00;
         usage(argv[0]);
         exit(1);
     }
-
-    if ((dev = openDevice()) == NULL) {
+    
+    if (strcasecmp(argv[1], "-h") == 0 || strcasecmp(argv[1], "--help") == 0) {
+        help(argv[0]);
         exit(1);
     }
     
-    if (strcasecmp(argv[1], "on") == 0) {
-        if (argc == 3) {
-            cmd = CMD_ON;
-        } else {
-            cmd = CMD_ALL_ON;
+    int i;
+    for(i=1; i<argc; ) {
+    
+        if (strcasecmp(argv[i], "on") == 0) {
+            operation = ID_ON;
+            if (argc > i+1 && *(argv[i+1]) != '-') { /* not an option like -n|-h|-name */
+                cmd = CMD_ON;
+                i++;
+                channel = (char)atol(argv[i]);
+            } else {
+                cmd = CMD_ALL_ON;
+            }
+        } else if (strcasecmp(argv[i], "off") == 0) {
+            operation = ID_OFF;
+            if (argc > i+1 && *(argv[i+1]) != '-') {
+                cmd = CMD_OFF;
+                i++;
+                channel = (char)atol(argv[i]);
+            } else {
+                cmd = CMD_ALL_OFF;
+            }
+        } else if (strcasecmp(argv[i], "get") == 0) {
+            operation = ID_GET;
+        } else if (strcasecmp(argv[i], "-n") == 0) {
+            if (argc > i+1) {
+                i++;
+                number = (int)atol(argv[i]);
+            }
+        } else if (strcasecmp(argv[i], "-name") == 0) {
+            if (argc > i+1) {
+                i++;
+                name = argv[i];
+            }
         }
-    } else if (strcasecmp(argv[1], "off") == 0) {
-        if (argc == 3) {
-            cmd = CMD_OFF;
-        } else {
-            cmd = CMD_ALL_OFF;
-        }
+    
+        i++;
+    }
+    
+
+    if ((dev = openDevice(number,name)) == NULL) {
+        exit(1);
     }
 
-    if (strcasecmp(argv[1], "get") == 0){
+    if (operation == ID_GET){
         int len = sizeof(buffer);
         if ((err = usbhidGetReport(dev, 0, buffer, &len)) != 0){
             fprintf(stderr, "error reading data: %s\n", usbErrorMessage(err));
@@ -122,8 +175,8 @@ char        cmd = 0x00;
         buffer[0] = 0x00;
         buffer[1] = cmd;
         
-        if (argc == 3) {
-            buffer[2] = (char)atol(argv[2]);
+        if (channel > 0) {
+            buffer[2] = channel;
         }
 
         if ((err = usbhidSetReport(dev, buffer, sizeof(buffer))) != 0) {   /* add a dummy report ID */

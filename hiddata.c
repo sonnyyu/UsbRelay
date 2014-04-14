@@ -41,7 +41,7 @@ char            *ascii = buffer;
     *ascii++ = 0;
 }
 
-int usbhidOpenDevice(usbDevice_t **device, int vendor, char *vendorName, int product, char *productName, int usesReportIDs)
+int usbhidOpenDevice(usbDevice_t **device, int vendor, const char *vendorName, int product, const char *productName, int num, int usesReportIDs)
 {
 GUID                                hidGuid;        /* GUID for HID driver */
 HDEVINFO                            deviceInfoList;
@@ -50,6 +50,7 @@ SP_DEVICE_INTERFACE_DETAIL_DATA     *deviceDetails = NULL;
 DWORD                               size;
 int                                 i, openFlag = 0;  /* may be FILE_FLAG_OVERLAPPED */
 int                                 errorCode = USBOPEN_ERR_NOTFOUND;
+int                                 cnt = 1;
 HANDLE                              handle = INVALID_HANDLE_VALUE;
 HIDD_ATTRIBUTES                     deviceAttributes;
 				
@@ -113,7 +114,13 @@ HIDD_ATTRIBUTES                     deviceAttributes;
             if(strcmp(productName, buffer) != 0)
                 continue;
         }
-        break;  /* we have found the device we are looking for! */
+        if (num == 0 || cnt == num) {
+            break;  /* we have found the device we are looking for! */
+        } else {
+            cnt++;
+            handle = INVALID_HANDLE_VALUE;
+            continue;
+        }
     }
     SetupDiDestroyDeviceInfoList(deviceInfoList);
     if(deviceDetails != NULL)
@@ -204,12 +211,13 @@ int     rval, i;
     return i-1;
 }
 
-int usbhidOpenDevice(usbDevice_t **device, int vendor, char *vendorName, int product, char *productName, int _usesReportIDs)
+int usbhidOpenDevice(usbDevice_t **device, int vendor, const char *vendorName, int product, const char *productName, int num, int _usesReportIDs)
 {
 struct usb_bus      *bus;
 struct usb_device   *dev;
 usb_dev_handle      *handle = NULL;
 int                 errorCode = USBOPEN_ERR_NOTFOUND;
+int                 cnt = 1;
 static int          didUsbInit = 0;
 
     if(!didUsbInit){
@@ -230,7 +238,13 @@ static int          didUsbInit = 0;
                     continue;
                 }
                 if(vendorName == NULL && productName == NULL){  /* name does not matter */
-                    break;
+                    if (num == 0 || cnt == num) {
+                        break;
+                    } else {
+                        cnt++;
+                        handle = NULL;
+                        continue;
+                    }
                 }
                 /* now check whether the names match: */
                 len = usbhidGetStringAscii(handle, dev->descriptor.iManufacturer, string, sizeof(string));
@@ -248,8 +262,15 @@ static int          didUsbInit = 0;
                         }else{
                             errorCode = USBOPEN_ERR_NOTFOUND;
                             /* fprintf(stderr, "seen product ->%s<-\n", string); */
-                            if(strcmp(string, productName) == 0)
-                                break;
+                            if(strcmp(string, productName) == 0){
+                                if (num == 0 || cnt == num) {
+                                    break;
+                                } else {
+                                    cnt++;
+                                    handle = NULL;
+                                    continue;
+                                }
+                            }
                         }
                     }
                 }

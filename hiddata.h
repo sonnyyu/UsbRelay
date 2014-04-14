@@ -34,11 +34,12 @@ typedef struct usbDevice    usbDevice_t;
 
 /* ------------------------------------------------------------------------ */
 
-int usbhidOpenDevice(usbDevice_t **device, int vendorID, char *vendorName, int productID, char *productName, int usesReportIDs);
+int usbhidOpenDevice(usbDevice_t **device, int vendorID, const char *vendorName, int productID, const char *productName, int num, int usesReportIDs);
 /* This function opens a USB device. 'vendorID' and 'productID' are the numeric
  * Vendor-ID and Product-ID of the device we want to open. If 'vendorName' and
  * 'productName' are both not NULL, only devices with matching manufacturer-
- * and product name strings are accepted. If the device uses report IDs,
+ * and product name strings are accepted. If num is greater than zero then this 
+ * function return n-th matched device. If the device uses report IDs,
  * 'usesReportIDs' must be set to a non-zero value.
  * Returns: If a matching device has been found, USBOPEN_SUCCESS is returned
  * and '*device' is set to an opaque pointer representing the device. The
