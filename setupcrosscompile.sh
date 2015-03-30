@@ -6,13 +6,10 @@ export STAGING_DIR
 TOOLCHAIN_DIR=$STAGING_DIR/toolchain-mips_r2_gcc-4.6-linaro_uClibc-0.9.33.2
 PATH=$TOOLCHAIN_DIR/bin:$PATH
 export PATH
-CFLAGS=$TOOLCHAIN_DIR/usr/include
+TARGET_DIR=$STAGING_DIR/target-mips_r2_uClibc-0.9.33.2
+CFLAGS=$TARGET_DIR/usr/include
 export CFLAGS
-LDFLAGS=$TOOLCHAIN_DIR/usr/lib
+LDFLAGS=$TARGET_DIR/usr/lib
 export LDFLAGS
 #LD_LIBRARY_PATH=$LDFLAGS
 #export LD_LIBRARY_PATH
-
-
-
-
