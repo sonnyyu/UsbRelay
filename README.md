@@ -1,6 +1,8 @@
 UsbRelay
 ========
 
+![ScreenShot](https://raw.githubusercontent.com/sonnyyu/UsbRelay/master/usbrelay.png)
+
 A tool to control a USBRelay2 board.
 These boards are based on the V-USB stack from http://www.obdev.at.
 
