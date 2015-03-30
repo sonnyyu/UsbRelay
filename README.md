@@ -4,7 +4,11 @@ UsbRelay
 ![ScreenShot](https://raw.githubusercontent.com/sonnyyu/UsbRelay/master/usbrelay.png)
 
 USB controlled relay board with 2 channels is used the HID technology.
-Specification: Relay type: 5V relay Contack type: NC / COM / NO  (250VAC/125VAC/30VDC, 10A) 
+
+Specification: 
+
+Relay type: 5V relay Contack type: NC / COM / NO  (250VAC/125VAC/30VDC, 10A) 
+
 Input voltage: DC 5V (USB)
 
 [How to Cross Compile for Arduino Yun/Openwrt](https://raw.githubusercontent.com/sonnyyu/UsbRelay/master/compileforarduinoyun.md)
