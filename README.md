@@ -37,4 +37,16 @@ sudo ./usbrelay get
 
  2: ON
  
- 
+./usbrelay -h
+
+help: ./usbrelay on|off [1|2|3|4] [-n <number>|all] [-name <name>] [-h]
+
+-h|--helpprint this help
+
+on|off [1|2|3|4]switch specified relay output on/off
+
+getget relay status
+
+-n <number>|alluse specified relay (if there are more than one relay)
+
+-name <name>use relay with name, default is "USBRelay2" 
