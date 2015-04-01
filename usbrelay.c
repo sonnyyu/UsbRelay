@@ -1,5 +1,5 @@
 /*
- * control USBRelay1 (based on V-USB stack from obdev.at
+ * control USBRelay2 (based on V-USB stack from obdev.at
  *
  * code based on Christian Starkjohann's hidtool, see https://github.com/obdev/v-usb)
  *
@@ -50,7 +50,7 @@ usbDevice_t     *dev = NULL;
 unsigned char   rawVid[2] = { 0xc0, 0x16 };  /* = 0x16c0 = 5824 = voti.nl */
 unsigned char   rawPid[2] = { 0xdf, 0x05 };  /* obdev's shared PID for HIDs */
 char            vendorName[] = "www.dcttech.com";
-char            productName[] = "USBRelay1";
+char            productName[] = "USBRelay2";
 int             vid = rawVid[0] + 256 * rawVid[1];
 int             pid = rawPid[0] + 256 * rawPid[1];
 int             err;
@@ -93,7 +93,7 @@ static void help(char *myName)
     fprintf(stdout, "  on|off [1|2|3|4]  switch specified relay output on/off\n");
     fprintf(stdout, "  get  get relay status\n");
     fprintf(stdout, "  -n <number>|all  use specified relay (if there are more than one relay)\n");
-    fprintf(stdout, "  -name <name>  use relay with name, default is \"USBRelay1\"\n");
+    fprintf(stdout, "  -name <name>  use relay with name, default is \"USBRelay2\"\n");
 }
 
 int main(int argc, char **argv)
